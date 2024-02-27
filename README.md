@@ -40,3 +40,13 @@ BITRUE_API_SPOT_AK
 BITRUE_API_SPOT_SK
 ```
 
+
+
+# AGENT INTERFACE
+
+```sh
+# 列出所有订单
+${agent_type}.order.list
+id symbol side status price ov ev utime ctime age
+```
+

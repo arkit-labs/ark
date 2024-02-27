@@ -40,13 +40,13 @@ save bitrue agent config
         -spot-ak:=opts  \
         -spot-sk:=opts  \
         -out:=opts
-    # save to 
-    local out=$opts[--out] 
+    # save to
+    local out=$opts[--out]
     local user=$opts[--user]
     local spot_sk=$opts[--spot-sk]
     local spot_ak=$opts[--spot-ak]
 
-    [[ -f $out ]] && error "the agent '$out' existed" 
+    [[ -f $out ]] && error "the agent '$out' existed"
 
     local prefix=BITRUE
     local template="\
@@ -78,7 +78,7 @@ OPTIONS:
     local markets=($argv)
     [[ -z $markets ]] && error "please set the market name"
     for m in $markets; do
-        #bitrue.spot.api.trade $m 
+        #bitrue.spot.api.trade $m
         bitrue.spot.api.allOrders $m
     done
 }
@@ -101,12 +101,12 @@ function bitrue.api.params() {
 function bitrue.spot.api.trade() {
 @doc "
 \$1:    market
-return: [(market,),...]   
+return: [(market,),...]
 "
     local market=$1
     local resp=$(bitrue.http.get api/v2/myTrades recvWindow 5000 symbol "${(U)market}")
     [[ $resp == '[]' ]] && return
-    <<< $resp 
+    <<< $resp
     #| jq -r '.[] | [.id, .time, .symbol, .price, .qty, .isBuyer] | @tsv'
 }
 
@@ -134,8 +134,8 @@ function bitrue.api.price() {
     local symbol=${1:=btcusdt}
     local ammount=${2:=1}
     local r=$(curl -s "${BITRUE_SPOT_API}/api/v1/ticker/price?symbol=${(U)symbol}" | jq -r .price)
-    [[ $r == null ]] && print "0" && return 
-    expr="x=(${(q)r}*$ammount)/1; if(x<1) print 0; x" 
+    [[ $r == null ]] && print "0" && return
+    expr="x=(${(q)r}*$ammount)/1; if(x<1) print 0; x"
     <<< $expr | bc -l
 }
 
@@ -159,7 +159,7 @@ function bitrue.spot.api.allOrders() {
         # 1. 订单的AGE
         print $resp | jq -r '.[] | [.orderId, .time, .side[:1], .status[:3], .price, .executedQty, .cummulativeQuoteQty] | @tsv'
     }
-    
+
     for x in $range; do
         r=(${(s=:=)x})
         query $r[1] $r[2]
@@ -268,7 +268,7 @@ function ark.sync() {
     for p in $bitrue; do
         xs=(${=p})
         # last | high | low
-        ark.state.price_put $xs[1] $xs[2] $xs[3] 
+        ark.state.price_put $xs[1] $xs[2] $xs[3]
     done
 
     # update account
@@ -433,7 +433,7 @@ ark agent add \${agent-id} [bitrue | okx]
     local agent=${(L)2}
 
     # check params
-    [[ -z $id ]] && error "agent id must NOT EMPTY" 
+    [[ -z $id ]] && error "agent id must NOT EMPTY"
     [[ $id =~ '[a-zA-Z]+[a-zA-Z0-9]*' ]] || error "agent id format error"
     [[ -z $agent ]] && error "agent must NOT EMPTY"
     [[ -z $ARK_AGENT_SUPPORTED[(r)$agent] ]] && error "invalidate agent '$agent'"
@@ -492,12 +492,16 @@ function ark.cmd.order.list() {
 $ ark order list \${agent_id}
 List the orders of target agent
 OPTIONS:
+
+USEAGE:
+
 "
-    local agent_id=${(L)1:$ARK_AGENT}
+    local agent_id=$ARK_AGENT
+
+    [[ -z $agent_id ]] && error "Agent is EMPTY"
+
     local user=${agent_id%@*}
     local agent=${agent_id#*@}
-
-    [[ -n $1 ]] && shift
 
     # 1. Load agent config
     config=$ARK_HOME/agents/$agent_id
@@ -523,6 +527,23 @@ function ark.cmd.config() {
 
 }
 
+
+# load the target module dir, the $mod_dir/@init file will be sourced, the other file will load as autoload functions
+# @load $mod_dir
+ARK_MOD=()
+function @load() {
+    local m=$1
+    [[ -d $m ]] || return 0
+    [[ $ARK_MOD[(r)$m] ]] && return 0
+
+    # 1. source @init first
+    [[ -f $m/@init ]] && source $m/@init
+
+    # 2. add autoload functions
+    #TESTME: $fpath contains space
+    [[ -z $fpath[(r)$m] ]] && fpath=("$m" $fpath) && autoload -- $m/[^@]*(:t)
+}
+
 function ark.config.agent.path() {
 @doc "
 Get the agent config path by agent_id
@@ -535,14 +556,19 @@ PARAMS:
 }
 #-----------------------------------------------[ cmd.test ]
 function ark.cmd.test() {
-@doc "
-$0 is for ark testing
-"
+    @load public
+    price 1 2 3
+    print $MOD_NAME
+}
+
+function ark.cmd.public() {
+    @load $ARK/public
+    price {1..20}
 }
 
 function main() {
 @doc "
-ark $VERSION is a crypto toolkit write with zsh
+ark $VERSION is a toolkit for playing web3
 OPTIONS:
     -a:--agent \$agent_id set the agent to use
 
@@ -551,10 +577,14 @@ COMMANDS:
     order
     config
     agent
+    price
     help
 "
     zparseopts -A opts -D -E -- a:=opts
     ARK_AGENT=$opts[-a]
+    ARK_AGENT_TYPE=
+    ARK_AGENT_NAME=
+
     local cmd=$1
     [[ -n $cmd ]] && shift
 
@@ -562,5 +592,7 @@ COMMANDS:
     ark.cmd.$cmd "$@"
 }
 
+
+ARK=$0:h
 main "$@"
-) 
+)
