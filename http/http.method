@@ -4,6 +4,7 @@
 local m=$1
 local p=$2
 local cmd
+[[ -n $m ]] && shift
 [[ -n $p ]] && shift
 
 # 1. build query string
@@ -23,7 +24,7 @@ cmd=(curl -s -w "%{http_code}" -X $m "$p${q:+"?$q"}")
     cmd+=("-H",  "Content-Type: application/json")
 }
 
-(( ${+HTTP_D} )) && cmd=(print -- $cmd)
+(( ${+HTTP_D} )) && print -u2 $cmd && return
 
 # TODO: add status code callback
 resp=$($cmd)
