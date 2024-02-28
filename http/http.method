@@ -7,9 +7,10 @@ local cmd
 [[ -n $p ]] && shift
 
 # 1. build query string
+# FIXME: URL ENCODING
 q=${(j:&:)argv}
 
-cmd=(curl -v -s -X $m "$p${q:+"?$q"}")
+cmd=(curl -s -w "%{http_code}" -X $m "$p${q:+"?$q"}")
 # 2. if set HTTP_H, build the headers
 (( ${+HTTP_H} )) && {
     for k v in ${(kv)HTTP_H}; do
@@ -25,4 +26,6 @@ cmd=(curl -v -s -X $m "$p${q:+"?$q"}")
 (( ${+HTTP_D} )) && cmd=(print -- $cmd)
 
 # TODO: add status code callback
-$cmd
+resp=$($cmd)
+code=$resp[-3,-1]
+print $resp[1,-4]

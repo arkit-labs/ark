@@ -6,3 +6,16 @@ function http.head() {
     (( +HTTP_H )) && typeset -g -A HTTP_H
     HTTP_H=("$@")
 }
+
+function http.json() {
+    (( +HTTP_J )) && typeset -g -A HTTP_J
+    HTTP_J=("$@")
+}
+
+function http.get() {
+    http.method GET  "$@"
+}
+
+function http.post() {
+    http.method POST "$@"
+}
