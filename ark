@@ -8,13 +8,15 @@ function @load() {
 
     # 1. source @init first
     [[ -f $m/@init ]] && source $m/@init
-
     # 2. add autoload functions
     #TESTME: $fpath contains space
-    [[ -z $fpath[(r)$m] ]] && fpath=("$m" $fpath) && autoload -- $m/[^@]*(:t)(N)
+    [[ -z $fpath[(r)$m] ]] && fpath=("$m" $fpath) && {
+        autoload -- $m/[^@]*(:t)
+    }
 }
 ARK=$0:h
 @load $ARK/docs
+@load $ARK/date
 
 
 #--------------------------------------------
@@ -55,43 +57,6 @@ BITRUE_API_SPOT_SK=$spot_sk
 }
 
 
-BITRUE_SPOT_API=https://openapi.bitrue.com
-function bitrue.api.sign() {
-    local s=$(print -n ${1} | openssl dgst -sha256 -hmac $BITRUE_API_SPOT_SK)
-    print -n ${s/*= }
-}
-
-function bitrue.spot.order.list() {
-@doc "
-List the order of target \$market
-OPTIONS:
-    -o:     open orders
-    -a:     all orders
-    -d \$n: query date limit (e.g. 90d 1m)
-"
-    local markets=($argv)
-    [[ -z $markets ]] && error "please set the market name"
-    for m in $markets; do
-        #bitrue.spot.api.trade $m
-        bitrue.spot.api.allOrders $m
-    done
-}
-
-function bitrue.api.params() {
-    typeset -A map
-    map=("${(@)argv}")
-    map[timestamp]=$(bitrue.time)
-
-    local r
-    for k in ${(ko)map}; do
-        v=$map[$k]
-        r="$r&${k}=${v}"
-    done
-    r="${r#&}"
-    r="${r}&signature=$(bitrue.api.sign $r)"
-    print $r
-}
-
 function bitrue.spot.api.trade() {
 @doc "
 \$1:    market
@@ -116,10 +81,6 @@ function bitrue.http.get() {
          -X GET "$url"
 }
 
-function bitrue.api.ping() {
-    curl -s ${BITRUE_SPOT_API}/api/v1/ping
-}
-
 function bitrue.time {
     curl -s ${BITRUE_SPOT_API}/api/v1/time | jq .serverTime
 }
@@ -139,95 +100,7 @@ function bitrue.spot.api.order() {
     <<< $resp
 }
 
-function bitrue.spot.api.allOrders() {
-    local market=$1
-    local limit=${3:=100}
-    local days=${2:=90}
-    local range=($(date.range $days))
 
-    function query() {
-        local resp=$(bitrue.http.get api/v1/allOrders recvWindow 5000 symbol "${(U)market}" startTime "$1" endTime "$2")
-        [[ $resp == *'"data":null'* ]] && return -1
-        [[ $resp == "[]" ]] && return 0
-        # TODO:
-        # 1. 订单的AGE
-        print $resp | jq -r '.[] | [.orderId, .time, .side[:1], .status[:3], .price, .executedQty, .cummulativeQuoteQty] | @tsv'
-    }
-
-    for x in $range; do
-        r=(${(s=:=)x})
-        query $r[1] $r[2]
-    done
-}
-
-function bitrue.spot.api.openOrders() {
-    local symbol=${1}
-    local params=
-    local resp=$(bitrue.http.get api/v1/openOrders)
-
-}
-
-# $1: the days before now
-# $2: steps (default:28 day)
-# return: [start_time:end_time ...]
-function date.range() {
-    let now=$(date +%s)
-    let prv=${1:=28}
-    let step=29
-    let day=$((24*60*60))
-
-    local xs=({$[$now-day*prv]..$now..$[$step*$day]})
-    (( $xs[-1] < $now )) && xs+=$now
-    let i=0
-    for x in $xs[1,-2]; do
-        i=$[i+1]
-        print $xs[i]001:$xs[i+1]000
-    done
-}
-
-function bitrue.exchangeInfo() {
-    resp=$(curl -s "${BITRUE_SPOT_API}/api/v1/exchangeInfo")
-    print $resp | jq .
-}
-
-function bitrue.api.order.list() {
-    local symbol=${1:=ftmusdt}
-    local limit=${3:=100}
-    local days=${2:=60}
-    local range=($(date.range $days))
-
-
-    function query() {
-        local startTime=$1
-        local endTime=$2
-        local params=$(bitrue.api.params recvWindow 5000 symbol ${(U)symbol} startTime $startTime endTime $endTime)
-        x='''
-{
-    "symbol": "ACEUSDT",
-    "orderId": "493450483729760256",
-    "price": "13.1000000000000000",                 # 价格
-    "origQty": "200.0000000000000000",              # 下单量
-    "executedQty": "199.8000000000000000",          # 成交数量
-    "cummulativeQuoteQty": "2617.3800000000000000", # 成交额
-    "status": "FILLED",                             # 状态
-    "type": "LIMIT",                                # 单子类型
-    "side": "BUY",                                  # 方向
-    "time": 1703379302514,
-    "updateTime": 1703396228000,
-}
-    '''
-        resp=$(curl -s \
-            -H "X-MBX-APIKEY: $BITRUE_AKEY" \
-            -X GET "${BITRUE_SPOT_API}/api/v1/allOrders?${params}")
-        [[ $resp == *'"data":null'* ]] && return -1
-        [[ $resp == "[]" ]] && return 0
-        print $resp | jq  -r '.[] | [.orderId,.symbol,.side,.status,.price,.origQty,.executedQty,.cummulativeQuoteQty,(.updateTime|tonumber)-(.time|tonumber)] | @tsv'
-    }
-    for x in $range; do
-        r=(${(s=:=)x})
-        query $r[1] $r[2]
-    done
-}
 
 #---------------------------------
 #
@@ -558,6 +431,7 @@ COMMANDS:
     [[ -n $cmd ]] && shift
 
     # CALL SUBCOMMAND
+    @load $ARK/agent/bitrue.spot
     ark.cmd.$cmd "$@"
     print $HTTP_DEBUG
 }

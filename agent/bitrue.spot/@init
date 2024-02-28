@@ -15,8 +15,26 @@ function bitrue.spot.api.sign() {
     print -n ${s/*= }
 }
 
-function bitrue.spot.http.get() {()
+function bitrue.spot.http.get() {(
     http.head "X-MBX-APIKEY: $BITRUE_API_SPOT_AK"
     http.get "$@"
 )}
 
+function bitrue.spot.api.exchangeInfo() {
+    http.get "$BITRUE_SPOT_API/api/v1/exchangeInfo"
+}
+
+function bitrue.api.params() {
+    typeset -A map
+    map=("${(@)argv}")
+    map[timestamp]=$(bitrue.time)
+
+    local r
+    for k in ${(ko)map}; do
+        v=$map[$k]
+        r="$r&${k}=${v}"
+    done
+    r="${r#&}"
+    r="${r}&signature=$(bitrue.api.sign $r)"
+    print $r
+}
