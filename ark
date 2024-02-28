@@ -566,6 +566,17 @@ function ark.cmd.public() {
     price {1..20}
 }
 
+function ark.cmd.http() {
+    @load $ARK/http
+    http.debug
+    http.head "a" "111" "b" "222"
+    print $HTTP_H
+    http.get "$@"
+    #http.method GET  "$@"
+    #http.method POST "$@"
+    #http.get $url h1=1 h2=2 h3=3 -- p1=1 p2=2
+}
+
 function main() {
 @doc "
 ark $VERSION is a toolkit for playing web3
@@ -580,16 +591,17 @@ COMMANDS:
     price
     help
 "
-    zparseopts -A opts -D -E -- a:=opts
-    ARK_AGENT=$opts[-a]
+    zparseopts -A opts -D -F -E -- {a,-agent}:=opts
+    ARK_AGENT=${opts[-a]:=$opts[--agent]}
     ARK_AGENT_TYPE=
     ARK_AGENT_NAME=
-
+    print -- $ARK_AGENT
     local cmd=$1
     [[ -n $cmd ]] && shift
 
     # CALL SUBCOMMAND
     ark.cmd.$cmd "$@"
+    print $HTTP_DEBUG
 }
 
 
