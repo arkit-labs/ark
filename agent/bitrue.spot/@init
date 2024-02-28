@@ -1,0 +1,22 @@
+@load $ARK/http
+
+readonly BITRUE_SPOT_API=https://openapi.bitrue.com
+
+function bitrue.spot.api.ping() {
+    http.get "$BITRUE_SPOT_API/api/v1/ping"
+}
+
+function bitrue.spot.api.time() {
+    http.get "$BITRUE_SPOT_API/api/v1/time"
+}
+
+function bitrue.spot.api.sign() {
+    local s=$(print -n ${1} | openssl dgst -sha256 -hmac $BITRUE_API_SPOT_SK)
+    print -n ${s/*= }
+}
+
+function bitrue.spot.http.get() {()
+    http.head "X-MBX-APIKEY: $BITRUE_API_SPOT_AK"
+    http.get "$@"
+)}
+

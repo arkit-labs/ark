@@ -1,27 +1,21 @@
 #!/bin/zsh
+# load the target module dir, the $mod_dir/@init file will be sourced, the other file will load as autoload functions
+ARK_MOD=()
+function @load() {
+    local m=$1
+    [[ -d $m ]] || return 0
+    [[ $ARK_MOD[(r)$m] ]] && return 0
 
-# @required module
+    # 1. source @init first
+    [[ -f $m/@init ]] && source $m/@init
 
-
-#--------------------------------------------【 ztest 】
-function ztest() {
-    local src=${1:=.}
-    local fx=(*_test.zsh)
-
-    function searchfn() {
-
-    }
-
-    function testfn() {
-
-    }
-
-    for f in fx; do
-    done
+    # 2. add autoload functions
+    #TESTME: $fpath contains space
+    [[ -z $fpath[(r)$m] ]] && fpath=("$m" $fpath) && autoload -- $m/[^@]*(:t)(N)
 }
+ARK=$0:h
+@load $ARK/docs
 
-#--------------------------------------------[ COMMON FUNC ]
-alias @doc='@doc.show "$@" && @doc.print '
 
 #--------------------------------------------
 #  AGENT FUNCTIONS
@@ -395,23 +389,6 @@ function ark.calc() {
 (
 VERSION=0.0.1
 
-
-function @doc.print() {
-    print -u2 -- ${1#"\n"}
-    exit 0
-}
-
-function @doc.show() {
-    # command
-    # subcommand
-    # 1: argv is empty              -> 0
-    [[ -z $argv ]] && return 0
-    # 2: argv contains -h or --help -> 0
-    return 1
-}
-
-# $1: message
-# $2: exit code
 function error() {
     print -u2 $1 && exit ${2:=1}
 }
@@ -528,22 +505,6 @@ function ark.cmd.config() {
 }
 
 
-# load the target module dir, the $mod_dir/@init file will be sourced, the other file will load as autoload functions
-# @load $mod_dir
-ARK_MOD=()
-function @load() {
-    local m=$1
-    [[ -d $m ]] || return 0
-    [[ $ARK_MOD[(r)$m] ]] && return 0
-
-    # 1. source @init first
-    [[ -f $m/@init ]] && source $m/@init
-
-    # 2. add autoload functions
-    #TESTME: $fpath contains space
-    [[ -z $fpath[(r)$m] ]] && fpath=("$m" $fpath) && autoload -- $m/[^@]*(:t)
-}
-
 function ark.config.agent.path() {
 @doc "
 Get the agent config path by agent_id
@@ -556,9 +517,7 @@ PARAMS:
 }
 #-----------------------------------------------[ cmd.test ]
 function ark.cmd.test() {
-    @load public
-    price 1 2 3
-    print $MOD_NAME
+    @doc "test test test..."
 }
 
 function ark.cmd.public() {
@@ -567,13 +526,14 @@ function ark.cmd.public() {
 }
 
 function ark.cmd.http() {
-    @load $ARK/http
+    #@load $ARK/http
     #http.debug
-    http.head "a" "111" "b" "222"
-    http.get "$@"
+    #http.head "a" "111" "b" "222"
+    #http.get "$@"
     #http.method GET  "$@"
     #http.method POST "$@"
     #http.get $url h1=1 h2=2 h3=3 -- p1=1 p2=2
+    bitrue.spot.api.ping
 }
 
 function main() {
@@ -603,6 +563,5 @@ COMMANDS:
 }
 
 
-ARK=$0:h
 main "$@"
 )

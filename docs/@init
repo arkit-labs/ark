@@ -1,0 +1,32 @@
+alias @doc='@doc.show "$@" && @doc.print '
+
+function @doc.print() {
+    print -u2 -- ${1#"\n"}
+    exit 0
+}
+
+function @doc.show() {
+    # command
+    # subcommand
+    # 1: argv is empty              -> 0
+    [[ -z $argv ]] && return 0
+    # 2: argv contains -h or --help -> 0
+    return 1
+}
+
+#--------------------------------------------【 ztest 】
+function ztest() {
+    local src=${1:=.}
+    local fx=(*_test.zsh)
+
+    function searchfn() {
+
+    }
+
+    function testfn() {
+
+    }
+
+    for f in fx; do
+    done
+}
