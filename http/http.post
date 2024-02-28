@@ -1,0 +1,18 @@
+local p=$1
+local cmd
+[[ -n $p ]] && shift
+
+# 1. build query string
+q=${(j:&:)argv}
+
+cmd=(curl -v -s -X GET "$p${q:+"?$q"}")
+# 2. if set HTTP_H, build the headers
+(( ${+HTTP_H} )) && {
+    for k v in ${(kv)HTTP_H}; do
+        cmd+=("-H" "$k: $v")
+    done
+}
+
+
+[[ -n $CURL_DRYRUN ]] && cmd=(print -- $cmd)
+$cmd

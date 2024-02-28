@@ -1,0 +1,8 @@
+function http.debug() {
+    typeset -g HTTP_D=1
+}
+
+function http.head() {
+    (( +HTTP_H )) && typeset -g -A HTTP_H
+    HTTP_H=("$@")
+}

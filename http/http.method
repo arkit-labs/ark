@@ -1,0 +1,28 @@
+# HTTP_J: POST JSON DATA
+# HTTP_D: DEBUG curl, dryrun
+# HTTP_H: Put HTTP header
+local m=$1
+local p=$2
+local cmd
+[[ -n $p ]] && shift
+
+# 1. build query string
+q=${(j:&:)argv}
+
+cmd=(curl -v -s -X $m "$p${q:+"?$q"}")
+# 2. if set HTTP_H, build the headers
+(( ${+HTTP_H} )) && {
+    for k v in ${(kv)HTTP_H}; do
+        cmd+=("-H" "$k: $v")
+    done
+}
+
+(( ${+HTTP_J} )) && {
+    cmd+=(--data "$HTTP_J")
+    cmd+=("-H",  "Content-Type: application/json")
+}
+
+(( ${+HTTP_D} )) && cmd=(print -- $cmd)
+
+# TODO: add status code callback
+$cmd
