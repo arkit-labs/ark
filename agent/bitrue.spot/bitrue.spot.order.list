@@ -1,0 +1,13 @@
+@doc "
+List the order of target \$market
+OPTIONS:
+    -o:     open orders
+    -a:     all orders
+    -d \$n: query date limit (e.g. 90d 1m)
+"
+
+local markets=($argv)
+[[ -z $markets ]] && error "please set the market name"
+for m in $markets; do
+    bitrue.spot.api.allOrders $m
+done

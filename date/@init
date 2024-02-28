@@ -1,0 +1,17 @@
+# $1: the days before now
+# $2: steps (default:28 day)
+# return: [start_time:end_time ...]
+function date.range() {
+    let now=$(date +%s)
+    let prv=${1:=28}
+    let step=29
+    let day=$((24*60*60))
+
+    local xs=({$[$now-day*prv]..$now..$[$step*$day]})
+    (( $xs[-1] < $now )) && xs+=$now
+    let i=0
+    for x in $xs[1,-2]; do
+        i=$[i+1]
+        print $xs[i]001:$xs[i+1]000
+    done
+}
