@@ -15,7 +15,7 @@ function @load() {
 ARK=$0:h
 @load $ARK/docs
 @load $ARK/date
-
+@load $ARK/cmds
 
 #--------------------------------------------
 #  AGENT FUNCTIONS
@@ -412,33 +412,6 @@ function ark.cmd.http() {
     bitrue.spot.api.ping
 }
 
-function main() {
-@doc "
-ark $VERSION is a toolkit for playing web3
-OPTIONS:
-    -a:--agent \$agent_id set the agent to use
-
-COMMANDS:
-    asset
-    order
-    config
-    agent
-    price
-    help
-"
-    zparseopts -A opts -D -F -E -- {a,-agent}:=opts
-    ARK_AGENT=${opts[-a]:=$opts[--agent]}
-    ARK_AGENT_TYPE=
-    ARK_AGENT_NAME=
-    local cmd=$1
-    [[ -n $cmd ]] && shift
-
-    # CALL SUBCOMMAND
-    @load $ARK/agent/bitrue.spot
-    ark.cmd.$cmd "$@"
-    print $HTTP_DEBUG
-}
-
-
-main "$@"
 )
+
+ark "$@"
