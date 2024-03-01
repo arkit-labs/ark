@@ -15,6 +15,10 @@ function bitrue.spot.api.sign() {
     print -n ${s/*= }
 }
 
+function bitrue.spot.api.v1() {
+    http.get "$BITRUE_SPOT_API/api/v1/$1"
+}
+
 function bitrue.spot.http.get() {
     bitrue.spot.http get "$@"
 }

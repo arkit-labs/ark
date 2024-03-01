@@ -14,15 +14,13 @@ COMMANDS:
 "
     zparseopts -A opts -D -F -E -- {a,-agent}:=opts
     ARK_AGENT=${opts[-a]:=$opts[--agent]}
-    ARK_AGENT_TYPE=
-    ARK_AGENT_NAME=
+    ARK_AGENT_TYPE=${ARK_AGENT#*@}
+    ARK_AGENT_NAME=${ARK_AGENT%@*}
     local cmd=$1
     [[ -n $cmd ]] && shift
 
     # CALL SUBCOMMAND
-    @load $ARK/agent/bitrue.spot
-    ark.cmd.$cmd "$@"
-    print $HTTP_DEBUG
+    ark.$cmd "$@"
 }
 
 main "$@"
