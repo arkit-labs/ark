@@ -1,0 +1,7 @@
+@doc "
+$ ark run \$module \$function
+"
+
+local mod=$1
+@load $ARK/$mod && shift
+$function "$@"
