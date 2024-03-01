@@ -1,0 +1,8 @@
+
+function logs.E() {
+    print -u2 -- "$*"
+}
+
+function logs.I() {
+    print -- "$*"
+}

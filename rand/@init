@@ -1,0 +1,4 @@
+function rand.byte() {
+    local size=${1:=64}
+    print -n "ibase=16;${(U)$(cat /dev/urandom | head -c $size | hexdump -ve '1/1 "%.2x"')}" | bc | tr -d "\n\\"
+}
