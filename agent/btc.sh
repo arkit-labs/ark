@@ -13,9 +13,9 @@ function base58() {
     local xs=''
 
     while [[ $dec != 0 ]]; do
-        xs+=$dict[$(echo "$dec%58" | bc)+1]
-        dec=$(echo "$dec/58" | bc)
-    done 
+        xs+=$dict[$(<<< "$dec%58" | bc)+1]
+        dec=$(<<< "$dec/58" | bc)
+    done
     # TODO: add padding with dict[1]
     print -r ${(j::)${(@Oa)${(s::)xs}}}
 }
@@ -36,5 +36,5 @@ function dec2hex() {
 }
 
 function string_to_bigint() {
-    
+
 }

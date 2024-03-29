@@ -10,6 +10,7 @@ function @doc.show() {
     # subcommand
     # 1: argv is empty              -> 0
     [[ -z $argv ]] && return 0
+    #[[ $argv =~ -h || $argv =~ --help ]] && return 0
     # 2: argv contains -h or --help -> 0
     return 1
 }

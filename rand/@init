@@ -1,4 +1,11 @@
-function rand.byte() {
+function rand.dec() {
     local size=${1:=64}
-    print -n "ibase=16;${(U)$(cat /dev/urandom | head -c $size | hexdump -ve '1/1 "%.2x"')}" | bc | tr -d "\n\\"
+    print -n "ibase=16;${(U)$(head -c $size /dev/urandom | hexdump -ve '1/1 "%.2x"')}" | bc | tr -d "\n\\"
+}
+
+function rand.hex() {
+    # TODO: mac的od不支持设置endian, 所以此函数用go实现
+    local size=${1:=64}
+    local r=($(head -c $size /dev/urandom | od -An -t x1))
+    print -n ${(j::)r}
 }

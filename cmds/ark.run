@@ -3,7 +3,8 @@
 $ ark run \$module \$function
 "
 
-local mod=$1
+local target=$1
+local mod=${target%%.*}
 @load $ARK/$mod && shift
-$function "$@"
+$target "$@"
 )

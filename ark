@@ -387,7 +387,7 @@ PARAMS:
     print -n "$ARK_HOME/agents/${(L)1}@${(L)2}"
 }
 #-----------------------------------------------[ cmd.test ]
-function ark.cmd.test() {
+function ark.test() {
     @doc "test test test..."
 }
 
