@@ -1,3 +1,28 @@
+# description: ez to use write test case of zsh
+# 1. auto testing by file OR function name
+# 2. write less testing code
+# 3. performance testings
+# 4. support testing report
 function test.hello() {
     print test.hello
+}
+
+function test.run() {
+
+}
+
+function test.search() {
+
+}
+
+function test.list() {
+    for d in $argv; do
+        print -l $d/*_test*(N)
+    done
+}
+
+function test.list.func() {
+    for f in $argv; do
+
+    done
 }
