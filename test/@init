@@ -29,7 +29,7 @@ function test.T() {(
     local -a meta=(${(s=:=)target}) params=("$@") 
     local func=$meta[2] desc=$meta[3]
 
-    local r=$($func "$@";print $?)
+    local r=$($func "$@")
 
     print $target ":" $params "=" $r status=$?
 )}
