@@ -3,12 +3,50 @@
 # 2. write less testing code
 # 3. performance testings
 # 4. support testing report
+# testing function name pattern:
+# (test|demo|fuzz|):$target_function:$description
 function test.hello() {
     print test.hello
 }
 
+
+
+alias T='test.T ${TEST_TARGET:=$0}'
+alias E=test.ERROR
+
+function test.ERROR() {
+    print -u2 $argv && exit 1
+}
+
+# T add 1 2 3
+# T add 2 2  -- 4
+# T add 2 2  '$(( 2+2 ))'
+# T add 3 -3  
+function test.T() {(
+    [[ -z $argv   ]] && E "TEST TARGET MISSED"
+    local target=$1
+    [[ -n $target ]] && shift
+    local -a meta=(${(s=:=)target}) params=("$@") 
+    local func=$meta[2] desc=$meta[3]
+
+    local r=$($func "$@";print $?)
+
+    print $target ":" $params "=" $r status=$?
+)}
+
+function add() {
+    print $(($1 + $2))
+}
+
 function test.run() {
 
+    function test:add:basic-case() {
+        print $0
+        T 1 2 ''
+        T 1 
+        T
+    }
+    test:add:basic-case
 }
 
 function test.search() {
